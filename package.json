@@ -4,6 +4,9 @@
   "description": "Minimal single/multiple-choice ask tool + TUI form for pi",
   "type": "module",
   "private": true,
+  "scripts": {
+    "test": "node scripts/smoke.mjs"
+  },
   "pi": {
     "extensions": ["./index.ts"]
   },
