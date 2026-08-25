@@ -46,7 +46,7 @@ Purely a source repo. Load it with pi directly, or link it into an auto-discover
 
 ```bash
 # quick test
-pi -e ./index.ts
+pi -e ./src/index.ts
 
 # or link into the global extension dir
 ln -s "$PWD" ~/.pi/agent/extensions/minimal-ask

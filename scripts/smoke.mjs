@@ -13,7 +13,7 @@ const jiti = createJiti(import.meta.url, {
 	},
 });
 
-const mod = await jiti.import(new URL("../index.ts", import.meta.url).href);
+const mod = await jiti.import(new URL("../src/index.ts", import.meta.url).href);
 const factory = mod.default;
 const { formatAnswer } = mod;
 

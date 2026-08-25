@@ -8,7 +8,7 @@
     "test": "node scripts/smoke.mjs"
   },
   "pi": {
-    "extensions": ["./index.ts"]
+    "extensions": ["./src/index.ts"]
   },
   "dependencies": {
     "@earendil-works/pi-coding-agent": "^0.84.3",
