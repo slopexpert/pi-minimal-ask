@@ -15,9 +15,11 @@ import {
   ASK_PROMPT_EVENT,
   type AskInput,
   type FormResult,
+  sanitizeAnswers,
 } from "./types.js";
 
 export { formatAnswer } from "./format.js";
+export { sanitizeAnswers } from "./types.js";
 export type { AskInput, QA, FormResult, Kind, Row } from "./types.js";
 
 export default function (pi: ExtensionAPI) {
@@ -32,7 +34,7 @@ export default function (pi: ExtensionAPI) {
       "Use the ask tool when you need the user to make a choice or confirm something before continuing.",
       "Use kind single for one choice (radio) and kind multiple when the user may pick several answers; in that case, do not say 'select all that apply' or similar in the question text.",
       "Put the most recommended choice first in answers; it is shown to the user as the first answer.",
-      "The user can also type a free-form answer, so do not add an 'other' or similar choice in answers.",
+      "The user can also type a free-form answer, so NEVER add an 'other', 'something else' or similar choice in answers.",
     ],
     parameters: AskParams,
     executionMode: "sequential",
@@ -49,7 +51,10 @@ export default function (pi: ExtensionAPI) {
           details: { answers: [], cancelled: true } as FormResult,
         };
       }
-      const questions: AskInput[] = params.questions;
+      const questions: AskInput[] = params.questions.map((q) => ({
+        ...q,
+        answers: sanitizeAnswers(q.answers),
+      }));
       if (questions.length === 0) {
         return {
           content: [{ type: "text", text: "Error: No questions provided" }],

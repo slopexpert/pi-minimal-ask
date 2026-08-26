@@ -15,7 +15,7 @@ const jiti = createJiti(import.meta.url, {
 
 const mod = await jiti.import(new URL("../src/index.ts", import.meta.url).href);
 const factory = mod.default;
-const { formatAnswer } = mod;
+const { formatAnswer, sanitizeAnswers } = mod;
 
 let failures = 0;
 function check(name, actual, expected) {
@@ -41,6 +41,28 @@ check("has execute", typeof captured?.execute, "function");
 const schema = JSON.parse(JSON.stringify(captured.parameters));
 check("params.questions is array", schema.properties?.questions?.type, "array");
 check("params item has kind enum", Array.isArray(schema.properties?.questions?.items?.properties?.kind?.enum), true);
+
+console.log("\n== answer blacklist ==");
+check(
+	"drops blacklisted answers",
+	JSON.stringify(sanitizeAnswers(["Other", "Something else", "None of the above", "keep me", "fix bug"])),
+	JSON.stringify(["keep me", "fix bug"]),
+);
+check(
+	"case/space insensitive",
+	JSON.stringify(sanitizeAnswers(["  other  ", "NONE OF THE ABOVE (I'LL DESCRIBE IT)", "yes"])),
+	JSON.stringify(["yes"]),
+);
+check(
+	"keeps normal answers",
+	JSON.stringify(sanitizeAnswers(["fix bug", "review code", "deploy"])),
+	JSON.stringify(["fix bug", "review code", "deploy"]),
+);
+check(
+	"drops describe-it / skip / n/a variants",
+	JSON.stringify(sanitizeAnswers(["Let me describe", "Skip", "N/A", "No preference", "yes"])),
+	JSON.stringify(["yes"]),
+);
 
 console.log("\n== output format (spec examples) ==");
 check(
