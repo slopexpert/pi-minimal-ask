@@ -4,6 +4,7 @@ import {
 	decodeKittyPrintable,
 	Key,
 	matchesKey,
+	stripTerminalSequences,
 	truncateToWidth,
 	visibleWidth,
 	wrapTextWithAnsi,
@@ -307,24 +308,20 @@ export function createForm(
 		}));
 		tabs.push({ label: "Confirm?", active: current === n, answered: false });
 
-		const check = (t: Tab) => (t.answered ? "✓ " : "  ");
-		let total = tabs.reduce((s, t) => s + visibleWidth(`${check(t)}${t.label} `), 0);
-		let overflow = total - rw;
-		if (overflow > 0) {
-			const nonActive = tabs
-				.filter((t) => !t.active)
-				.sort((a, b) => visibleWidth(b.label) - visibleWidth(a.label));
-			for (const t of nonActive) {
-				if (overflow <= 0) break;
-				const w = visibleWidth(t.label);
-				const cut = Math.max(1, Math.min(w, overflow));
-				t.label = truncateToWidth(t.label, Math.max(0, w - cut), "");
-				overflow -= cut;
+		// fixed per-tab budget so every label gets the same width, no starved tabs
+		const target = Math.max(1, rw - 1);
+		const maxLabel = Math.max(1, Math.floor(target / tabs.length) - 4);
+		for (const t of tabs) {
+			if (visibleWidth(t.label) > maxLabel) {
+				t.label = stripTerminalSequences(
+					truncateToWidth(t.label, maxLabel, "…"),
+				);
 			}
 		}
 		return tabs
 			.map((t) => {
-				const text = `${check(t)}${t.label} `;
+				// symmetric 1-space padding on both sides of the box
+				const text = ` ${t.label} `;
 				return t.active
 					? theme.bg("selectedBg", theme.fg("text", text))
 					: theme.fg(t.answered ? "success" : "muted", text);
@@ -408,7 +405,12 @@ export function createForm(
 		const q = questions[current];
 		const opts = optionsFor(current);
 
-		if (!isMultiQ) {
+		if (isMultiQ) {
+			// full active question below the compact tab bar
+			lines.push("");
+			addWrapped(theme.fg("accent", theme.bold(q.question)));
+			lines.push("");
+		} else {
 			addPrefix(" ", theme.fg("accent", theme.bold(q.question)));
 		}
 
